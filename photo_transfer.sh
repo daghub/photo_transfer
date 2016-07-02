@@ -1,29 +1,40 @@
 #!/bin/bash
 
-photo_source=~/Pictures/Foton/upload
-photo_temp=~/.phototemp/
-photo_dest=~/Pictures/Foton
+photo_source=/home/htpc/Pictures/upload
+photo_temp=/home/htpc/.phototemp/
+photo_dest="/home/htpc/Pictures/Foton"
+photo_dest_olivia="/home/htpc/Pictures/OliviasFoton"
+photo_dest_malte="/home/htpc/Pictures/MaltesFoton"
 
 mkdir -p $photo_temp
-mkdir -p $photo_dest
 
 echo $photo_source
 
 function copy_iphone {
     find $photo_source/$1/. -type f ! -executable \( -name "*.JPG" -o -name "*.MOV" \) | while read line
     do
-	if cp -p "$line" $photo_temp
-	then chmod +x "$line"
-	else exit $?
-	fi
+	    if cp -p "$line" $photo_temp
+	      then chmod +x "$line"
+	      else exit $?
+	    fi
     done
 }
 
 function move_generic {
     find $photo_source/$1/. -type f \( -name "*.JPG" -o -name "*.MOV" -o -name "*.MTS" \) | while read line
     do
-	mv "$line" $photo_temp
+	    mv "$line" $photo_temp
     done
+}
+
+function move_to_dest {
+    echo Moving files to proper locations "$1"
+    mkdir -p $1
+    chown -R :www-data $photo_temp
+    exiftool -r -v3 -P -d "$1/%Y/%m.%B/img_%Y-%m-%d_%H.%M.%S" -ext JPG '-filename<${Exif:CreateDate}_$Make.$Model%-c.%le' "$photo_temp"
+    exiftool -r -v3 -P -d "$1/%Y/%m.%B/mov_%Y-%m-%d_%H.%M.%S" -ext MOV '-filename<${QuickTime:CreateDate}_${QuickTime:Make-swe}.${QuickTime:Model-swe}%-c.%le' "$photo_temp"
+    exiftool -r -v3 -P -d "$1/%Y/%m.%B/img_%Y-%m-%d_%H.%M.%S%%-c.%%le" -ext JPG '-filename<FileModifyDate' "$photo_temp"
+    exiftool -r -v3 -P -d "$1/%Y/%m.%B/mov_%Y-%m-%d_%H.%M.%S%%-c.%%le" -ext MTS -ext MOV '-filename<FileModifyDate' "$photo_temp"
 }
 
 echo "Copying from dags_iphone"
@@ -36,12 +47,17 @@ copy_iphone "idas_iphone6"
 echo "Moving from sdcard"
 move_generic "sdcard"
 
-chown -R :www-data $photo_temp
+move_to_dest $photo_dest
 
-echo "Moving files to proper locations"
-exiftool -r -v3 -P -d "$photo_dest/%Y/%m.%B/img_%Y-%m-%d_%H.%M.%S" -ext JPG '-filename<${Exif:CreateDate}_$Make.$Model%-c.%le' "$photo_temp"
-exiftool -r -v3 -P -d "$photo_dest/%Y/%m.%B/mov_%Y-%m-%d_%H.%M.%S" -ext MOV '-filename<${QuickTime:CreateDate}_${QuickTime:Make-swe}.${QuickTime:Model-swe}%-c.%le' "$photo_temp"
-exiftool -r -v3 -P -d "$photo_dest/%Y/%m.%B/img_%Y-%m-%d_%H.%M.%S%%-c.%%le" -ext JPG '-filename<FileModifyDate' "$photo_temp"
-exiftool -r -v3 -P -d "$photo_dest/%Y/%m.%B/mov_%Y-%m-%d_%H.%M.%S%%-c.%%le" -ext MTS -ext MOV '-filename<FileModifyDate' "$photo_temp"
+echo "Moving from olivia"
+move_generic "olivia"
+
+move_to_dest $photo_dest_olivia
+
+echo "Moving from malte"
+move_generic "malte"
+
+move_to_dest $photo_dest_malte
+
 
 
