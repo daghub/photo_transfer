@@ -21,7 +21,7 @@ function copy_iphone {
 }
 
 function copy_android {
-    find $photo_source/$1/. -type f ! -executable \( -name "*.jpg" -o -name "*.mp4" \) | while read line
+    find $photo_source/$1/. -type f ! -executable \( -name "*.jpg" -o -name "*.mp4" -o -name "*.mkv" \) | while read line
     do
             if cp -p "$line" $photo_temp
               then chmod +x "$line"
@@ -45,7 +45,7 @@ function move_to_dest {
     $exif_tool -r -v3 -P -d "$1/%Y/%m.%B/mov_%Y-%m-%d_%H.%M.%S" -ext MOV -ext mov -ext mp4 '-filename<${QuickTime:CreateDate}_${QuickTime:Make-swe}.${QuickTime:Model-swe}%-c.%le' "$photo_temp"
     $exif_tool -r -v3 -P -d "$1/%Y/%m.%B/img_%Y-%m-%d_%H.%M.%S%%-c.%%le" -ext JPG '-filename<FileModifyDate' "$photo_temp"
     # catch all for movie clips
-    $exif_tool -r -v3 -P -d "$1/%Y/%m.%B/mov_%Y-%m-%d_%H.%M.%S%%-c.%%le" -ext MTS -ext MOV -ext mp4 -ext avi -ext AVI '-filename<FileModifyDate' "$photo_temp"
+    $exif_tool -r -v3 -P -d "$1/%Y/%m.%B/mov_%Y-%m-%d_%H.%M.%S%%-c.%%le" -ext MTS -ext MOV -ext mp4 -ext avi -ext AVI -ext mkv '-filename<FileModifyDate' "$photo_temp"
 }
 
 echo "Copying from dags_iphone"
